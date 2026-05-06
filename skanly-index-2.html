@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Skanly – Kvitteringer, utgifter & fakturaer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080a0e;--surface:#0f1218;--surface2:#151920;--border:#1e2535;
+  --accent:#00e5a0;--accent2:#00b37d;--text:#e8edf5;--muted:#4a5568;--muted2:#6b7a93;
+  --red:#ff4d6d;--yellow:#ffd166;--blue:#4facfe;--purple:#a78bfa;--orange:#ff9a3c;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh;}
+
+/* LANDING */
+#landing{display:block;}
+#app{display:none;}
+
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:18px 48px;background:rgba(8,10,14,0.9);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--text);text-decoration:none;display:flex;align-items:center;gap:4px;}
+.logo-dot{color:var(--accent);}
+.nav-right{display:flex;gap:12px;align-items:center;}
+
+.btn{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;padding:11px 26px;border-radius:8px;border:none;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;}
+.btn-primary{background:var(--accent);color:#080a0e;}
+.btn-primary:hover{background:#00ffb3;transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,229,160,0.3);}
+.btn-ghost{background:transparent;color:var(--text);border:1.5px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-red{background:var(--red);color:white;}
+.btn-red:hover{background:#ff2050;}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:120px 24px 80px;position:relative;overflow:hidden;}
+.hero-glow{position:absolute;width:900px;height:900px;background:radial-gradient(circle,rgba(0,229,160,0.06) 0%,transparent 65%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(30,37,53,0.4) 1px,transparent 1px),linear-gradient(90deg,rgba(30,37,53,0.4) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at center,black 30%,transparent 75%);pointer-events:none;}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);border-radius:100px;padding:6px 16px;font-size:13px;color:var(--accent);margin-bottom:32px;animation:fadeUp 0.5s ease both;}
+.hero h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(44px,8vw,90px);line-height:1.0;letter-spacing:-3px;margin-bottom:24px;animation:fadeUp 0.5s ease 0.1s both;}
+.hero h1 span{color:var(--accent);}
+.hero p{font-size:18px;color:var(--muted2);max-width:500px;line-height:1.7;margin-bottom:40px;animation:fadeUp 0.5s ease 0.2s both;}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;animation:fadeUp 0.5s ease 0.3s both;}
+.hero-note{margin-top:14px;font-size:13px;color:var(--muted);animation:fadeUp 0.5s ease 0.4s both;}
+
+.features-strip{padding:80px 24px;max-width:1100px;margin:0 auto;}
+.strip-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.strip-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;transition:all 0.2s;}
+.strip-card:hover{border-color:rgba(0,229,160,0.3);transform:translateY(-3px);}
+.strip-icon{font-size:30px;margin-bottom:14px;display:block;}
+.strip-card h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:8px;}
+.strip-card p{font-size:14px;color:var(--muted2);line-height:1.6;}
+
+/* PRICING */
+.pricing-section{padding:80px 24px;max-width:1100px;margin:0 auto;}
+.sec-label{font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:14px;}
+.sec-title{font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,52px);font-weight:800;letter-spacing:-1.5px;margin-bottom:50px;line-height:1.1;}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.price-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:30px;transition:transform 0.2s;}
+.price-card:hover{transform:translateY(-4px);}
+.price-card.hot{background:linear-gradient(135deg,rgba(0,229,160,0.08),rgba(0,179,125,0.04));border-color:rgba(0,229,160,0.3);position:relative;}
+.hot-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#080a0e;font-size:11px;font-weight:800;font-family:'Syne',sans-serif;letter-spacing:1px;padding:4px 14px;border-radius:100px;text-transform:uppercase;}
+.price-name{font-size:12px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.price-amount{font-family:'Syne',sans-serif;font-size:50px;font-weight:800;line-height:1;letter-spacing:-2px;}
+.price-amount sup{font-size:18px;vertical-align:super;letter-spacing:0;}
+.price-amount sub{font-size:15px;font-weight:400;color:var(--muted2);}
+.price-desc{font-size:14px;color:var(--muted2);margin:12px 0 22px;}
+.price-feats{list-style:none;display:flex;flex-direction:column;gap:9px;}
+.price-feat{font-size:14px;color:var(--muted2);display:flex;align-items:center;gap:8px;}
+.price-feat::before{content:'✓';color:var(--accent);font-weight:700;}
+.price-btn-wrap{margin-top:24px;}
+
+footer{border-top:1px solid var(--border);padding:28px 48px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── AUTH SCREEN ── */
+#authScreen {
+  display:none; position:fixed; inset:0; z-index:500;
+  background:var(--bg);
+  align-items:center; justify-content:center;
+}
+.auth-box {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:20px; padding:48px 40px; width:100%; max-width:420px;
+  text-align:center;
+}
+.auth-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:28px; color:var(--text); margin-bottom:8px; }
+.auth-logo span { color:var(--accent); }
+.auth-sub { font-size:14px; color:var(--muted2); margin-bottom:36px; }
+.auth-tabs { display:flex; gap:4px; background:var(--surface2); border-radius:10px; padding:4px; margin-bottom:28px; }
+.auth-tab { flex:1; padding:9px; border-radius:7px; font-size:13px; font-weight:600; border:none; background:transparent; cursor:pointer; color:var(--muted2); font-family:'Inter',sans-serif; transition:all 0.15s; }
+.auth-tab.active { background:var(--surface); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+.auth-field { margin-bottom:14px; text-align:left; }
+.auth-field label { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted2); display:block; margin-bottom:6px; }
+.auth-field input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; font-size:15px; color:var(--text); font-family:'Inter',sans-serif; }
+.auth-field input:focus { outline:none; border-color:var(--accent); }
+.auth-btn { width:100%; padding:14px; background:var(--accent); color:#080a0e; border:none; border-radius:9px; font-family:'Syne',sans-serif; font-weight:800; font-size:15px; cursor:pointer; margin-top:8px; transition:all 0.2s; }
+.auth-btn:hover { background:#00ffb3; }
+.auth-error { color:var(--red); font-size:13px; margin-top:10px; min-height:18px; }
+.auth-msg { color:var(--accent); font-size:13px; margin-top:10px; min-height:18px; }
+
+/* PLAN BADGES */
+.plan-badge { display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:100px;font-size:12px;font-weight:700; }
+.plan-gratis { background:rgba(107,122,147,0.15);color:var(--muted2); }
+.plan-pro { background:rgba(0,229,160,0.12);color:var(--accent); }
+.plan-bedrift { background:rgba(79,172,254,0.12);color:var(--blue); }
+
+/* UPGRADE MODAL */
+.upgrade-grid { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px; }
+.upgrade-card { background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:22px;text-align:center;cursor:pointer;transition:all 0.2s; }
+.upgrade-card:hover,.upgrade-card.selected { border-color:var(--accent);background:rgba(0,229,160,0.05); }
+.upgrade-card h3 { font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px; }
+.upgrade-card .pris { font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--accent);margin:10px 0 4px; }
+.upgrade-card .pris sub { font-size:14px;font-weight:400;color:var(--muted2); }
+.upgrade-card ul { list-style:none;text-align:left;margin-top:14px;display:flex;flex-direction:column;gap:7px; }
+.upgrade-card li { font-size:13px;color:var(--muted2);display:flex;align-items:center;gap:6px; }
+.upgrade-card li::before { content:'✓';color:var(--accent);font-weight:700; }
+.limit-banner { background:rgba(255,209,102,0.08);border:1px solid rgba(255,209,102,0.2);border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;font-size:14px; }
+.limit-banner span { color:var(--yellow); }
+.limit-banner button { background:var(--accent);color:#080a0e;border:none;border-radius:6px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif; }
+
+/* ── APP ── */
+.app-shell{display:flex;flex-direction:column;min-height:100vh;}
+.app-nav{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50;}
+.app-layout{display:grid;grid-template-columns:220px 1fr;flex:1;min-height:calc(100vh - 53px);}
+.app-sidebar{background:var(--surface);border-right:1px solid var(--border);padding:16px 10px;}
+.sb-sec{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:0 10px;margin:16px 0 6px;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:14px;cursor:pointer;transition:background 0.15s;margin-bottom:2px;color:var(--text);}
+.sb-item:hover{background:var(--surface2);}
+.sb-item.active{background:rgba(0,229,160,0.08);color:var(--accent);font-weight:500;}
+.sb-icon{font-size:15px;}
+.app-main{padding:24px;overflow-y:auto;}
+.app-page{display:none;}
+.app-page.active{display:block;animation:fadeUp 0.3s ease;}
+.page-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-0.5px;margin-bottom:4px;}
+.page-sub{font-size:14px;color:var(--muted2);margin-bottom:24px;}
+
+/* TABS */
+.tabs{display:flex;gap:4px;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:24px;width:fit-content;}
+.tab{padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600;border:none;background:transparent;cursor:pointer;color:var(--muted2);font-family:'Inter',sans-serif;transition:all 0.15s;}
+.tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.form-grid.three{grid-template-columns:1fr 1fr 1fr;}
+.form-full{grid-column:1/-1;}
+.field label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted2);display:block;margin-bottom:6px;}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:10px 14px;font-size:14px;color:var(--text);
+  font-family:'Inter',sans-serif;transition:border-color 0.2s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted);}
+.field select option{background:var(--surface2);}
+.field textarea{resize:vertical;min-height:70px;}
+
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--border);border-radius:14px;padding:36px 24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px;position:relative;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(0,229,160,0.03);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;}
+.upload-icon{font-size:40px;margin-bottom:10px;}
+.upload-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px;}
+.upload-sub{font-size:13px;color:var(--muted2);}
+.upload-sub span{color:var(--accent);}
+.img-preview{width:100%;max-height:240px;object-fit:contain;border-radius:10px;border:1px solid var(--border);margin-bottom:14px;display:none;}
+.or-div{display:flex;align-items:center;gap:14px;font-size:13px;color:var(--muted);margin:14px 0;}
+.or-div::before,.or-div::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* VARELINJER */
+.vare-header{display:grid;grid-template-columns:2fr 1fr 1fr 80px 36px;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);padding:0 4px;margin-bottom:6px;}
+.vare-row{display:grid;grid-template-columns:2fr 1fr 1fr 80px 36px;gap:8px;margin-bottom:8px;align-items:center;}
+.vare-row input{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:14px;color:var(--text);font-family:'Inter',sans-serif;width:100%;}
+.vare-row input:focus{outline:none;border-color:var(--accent);}
+.vare-row select{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 8px;font-size:13px;color:var(--text);font-family:'Inter',sans-serif;width:100%;}
+.vare-del{background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.2);border-radius:6px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all 0.15s;flex-shrink:0;}
+.vare-del:hover{background:rgba(255,77,109,0.2);}
+.add-vare-btn{display:flex;align-items:center;gap:8px;background:rgba(0,229,160,0.06);border:1px dashed rgba(0,229,160,0.3);border-radius:8px;padding:10px 16px;font-size:14px;color:var(--accent);cursor:pointer;transition:all 0.15s;font-family:'Inter',sans-serif;margin-bottom:16px;}
+.add-vare-btn:hover{background:rgba(0,229,160,0.1);}
+
+/* TOTALT */
+.total-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:16px;}
+.total-row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;color:var(--muted2);}
+.total-row.big{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);margin-bottom:0;}
+
+/* RESULT */
+.result-card{background:var(--surface);border:1px solid rgba(0,229,160,0.2);border-radius:14px;padding:24px;margin-top:20px;display:none;animation:fadeUp 0.3s ease;}
+.result-card.show{display:block;}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.result-item{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:13px 15px;}
+.ri-label{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:4px;}
+.ri-value{font-size:17px;font-weight:600;}
+.ri-value.green{color:var(--accent);}
+.cat-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-size:13px;font-weight:600;}
+
+/* LIST */
+.list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.item-list{display:flex;flex-direction:column;gap:8px;}
+.list-item{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all 0.15s;}
+.list-item:hover{border-color:rgba(0,229,160,0.3);transform:translateX(3px);}
+.li-left{display:flex;align-items:center;gap:12px;}
+.li-emoji{font-size:22px;}
+.li-info h4{font-size:15px;font-weight:500;}
+.li-info p{font-size:13px;color:var(--muted2);margin-top:2px;}
+.li-right{text-align:right;}
+.li-amount{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;}
+.li-date{font-size:12px;color:var(--muted2);margin-top:2px;}
+.status-badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+.s-usendt{background:rgba(255,154,60,0.1);color:var(--orange);}
+.s-sendt{background:rgba(79,172,254,0.1);color:var(--blue);}
+.s-betalt{background:rgba(0,229,160,0.1);color:var(--accent);}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted2);}
+.empty-state .e-icon{font-size:48px;margin-bottom:16px;}
+.empty-state h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;}
+
+/* OVERVIEW */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;}
+.stat-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-1px;}
+.stat-value.green{color:var(--accent);}
+.stat-sub{font-size:12px;color:var(--muted2);margin-top:3px;}
+.cat-chart{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;}
+.cat-chart h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:18px;}
+.cat-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.cat-lbl{font-size:13px;width:110px;flex-shrink:0;}
+.cat-track{flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden;}
+.cat-fill{height:100%;border-radius:4px;transition:width 1s ease;}
+.cat-val{font-size:13px;font-weight:600;width:80px;text-align:right;}
+
+/* ANALYZE */
+.analyze-btn{width:100%;padding:14px;background:var(--accent);color:#080a0e;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.analyze-btn:hover{background:#00ffb3;box-shadow:0 8px 28px rgba(0,229,160,0.25);}
+.analyze-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 10px;display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.analyzing{text-align:center;padding:24px 0;display:none;}
+.analyzing .spinner{display:block;}
+
+/* FAKTURA PREVIEW */
+.faktura-preview{background:white;color:#111;border-radius:12px;padding:36px;margin-top:20px;display:none;}
+.faktura-preview.show{display:block;}
+.fp-header{display:flex;justify-content:space-between;margin-bottom:32px;}
+.fp-logo{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--accent);}
+.fp-title{font-size:28px;font-weight:800;color:#111;text-align:right;}
+.fp-nr{font-size:14px;color:#666;text-align:right;}
+.fp-parties{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:28px;}
+.fp-party-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#999;margin-bottom:6px;}
+.fp-party h4{font-size:16px;font-weight:700;color:#111;margin-bottom:4px;}
+.fp-party p{font-size:14px;color:#555;line-height:1.5;}
+.fp-table{width:100%;border-collapse:collapse;margin-bottom:24px;}
+.fp-table th{font-size:12px;text-transform:uppercase;letter-spacing:0.8px;color:#999;border-bottom:2px solid #eee;padding:8px 12px;text-align:left;}
+.fp-table td{padding:10px 12px;font-size:14px;border-bottom:1px solid #f5f5f5;color:#333;}
+.fp-totals{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.fp-total-row{display:flex;gap:24px;font-size:14px;color:#555;}
+.fp-total-row.final{font-size:20px;font-weight:800;color:#111;border-top:2px solid #eee;padding-top:10px;margin-top:4px;}
+
+/* TOAST & MODAL */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--accent);color:var(--text);padding:12px 20px;border-radius:10px;font-size:14px;transform:translateY(80px);opacity:0;transition:all 0.3s;z-index:300;}
+.toast.show{transform:translateY(0);opacity:1;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.overlay.show{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:20px;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+
+@media(max-width:768px){
+  .strip-grid,.pricing-grid,.stats-grid{grid-template-columns:1fr;}
+  .app-layout{grid-template-columns:1fr;}
+  .app-sidebar{display:none;}
+  nav{padding:14px 20px;}
+  .form-grid,.form-grid.three,.result-grid{grid-template-columns:1fr;}
+  .vare-header,.vare-row{grid-template-columns:1.5fr 0.8fr 0.8fr 70px 34px;}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ LANDING ══ -->
+<div id="landing">
+  <nav>
+    <a href="#" class="logo">Skanly<span class="logo-dot">.</span></a>
+    <div class="nav-right">
+      <button class="btn btn-ghost" onclick="goApp()">Logg inn</button>
+      <button class="btn btn-primary" onclick="goApp()">Start gratis</button>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-tag">✦ Kvitteringer · Fakturaer · Utgifter</div>
+    <h1>Økonomi.<br><span>Enkelt.</span></h1>
+    <p>Scan kvitteringer, legg inn utgifter manuelt og send fakturaer – alt på ett sted. For håndverkere, frilansere og alle andre.</p>
+    <div class="hero-cta">
+      <button class="btn btn-primary" style="font-size:16px;padding:14px 34px;" onclick="goApp()">Kom i gang gratis →</button>
+    </div>
+    <p class="hero-note">Ingen kredittkort · Alt lagres automatisk</p>
+  </section>
+
+  <section class="features-strip">
+    <div class="strip-grid">
+      <div class="strip-card">
+        <span class="strip-icon">📷</span>
+        <h3>Scan kvittering</h3>
+        <p>Ta bilde eller last opp – AI leser butikk, beløp, dato og kategori automatisk.</p>
+      </div>
+      <div class="strip-card">
+        <span class="strip-icon">✏️</span>
+        <h3>Manuell registrering</h3>
+        <p>Handlet uten kvittering? Legg inn selv med antall, enhet (meter, kg, stk) og pris per enhet.</p>
+      </div>
+      <div class="strip-card">
+        <span class="strip-icon">📄</span>
+        <h3>Send faktura</h3>
+        <p>Lag profesjonell faktura og send direkte på e-post til kunden. Alt lagres automatisk.</p>
+      </div>
+      <div class="strip-card">
+        <span class="strip-icon">💾</span>
+        <h3>Alt lagres</h3>
+        <p>Ingen data forsvinner. Logg inn fra telefon, PC eller nettbrett – alt er der.</p>
+      </div>
+      <div class="strip-card">
+        <span class="strip-icon">📊</span>
+        <h3>Oversikt</h3>
+        <p>Se nøyaktig hva du bruker penger på. Månedlig rapport per kategori.</p>
+      </div>
+      <div class="strip-card">
+        <span class="strip-icon">🔧</span>
+        <h3>For alle</h3>
+        <p>Håndverker, frilanser, ansatt eller privatperson – Skanly passer for alle.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pricing-section">
+    <div class="sec-label">Priser</div>
+    <h2 class="sec-title">Rett og slett.</h2>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-name">Gratis</div>
+        <div class="price-amount">0<sub> kr/mnd</sub></div>
+        <div class="price-desc">For å prøve</div>
+        <ul class="price-feats">
+          <li class="price-feat">10 kvitteringer/mnd</li>
+          <li class="price-feat">3 fakturaer/mnd</li>
+          <li class="price-feat">Grunnleggende oversikt</li>
+        </ul>
+        <div class="price-btn-wrap"><button class="btn btn-ghost" style="width:100%;justify-content:center;" onclick="goApp()">Start gratis</button></div>
+      </div>
+      <div class="price-card hot">
+        <div class="hot-badge">POPULÆR</div>
+        <div class="price-name">Pro</div>
+        <div class="price-amount"><sup>kr</sup>99<sub>/mnd</sub></div>
+        <div class="price-desc">For frilansere og ENK</div>
+        <ul class="price-feats">
+          <li class="price-feat">Ubegrenset alt</li>
+          <li class="price-feat">AI-scanning</li>
+          <li class="price-feat">Fakturaer på e-post</li>
+          <li class="price-feat">CSV/PDF-eksport</li>
+        </ul>
+        <div class="price-btn-wrap"><button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="goApp()">Prøv gratis i 14 dager</button></div>
+      </div>
+      <div class="price-card">
+        <div class="price-name">Bedrift</div>
+        <div class="price-amount"><sup>kr</sup>249<sub>/mnd</sub></div>
+        <div class="price-desc">For team</div>
+        <ul class="price-feats">
+          <li class="price-feat">Alt i Pro</li>
+          <li class="price-feat">Opptil 5 brukere</li>
+          <li class="price-feat">Regnskapseksport</li>
+          <li class="price-feat">Prioritert support</li>
+        </ul>
+        <div class="price-btn-wrap"><button class="btn btn-ghost" style="width:100%;justify-content:center;" onclick="goApp()">Kontakt oss</button></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span class="logo" style="font-size:17px;">Skanly<span class="logo-dot">.</span></span>
+    <span>© 2025 Skanly AS · Norge</span>
+    <span>Personvern · Vilkår</span>
+  </footer>
+</div>
+
+<!-- ══ APP ══ -->
+<!-- ══ AUTH SCREEN ══ -->
+<div id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">Skanly<span>.</span></div>
+    <div class="auth-sub">Kvitteringer, utgifter og fakturaer</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login',this)">Logg inn</button>
+      <button class="auth-tab" onclick="switchAuthTab('register',this)">Registrer</button>
+    </div>
+    <div class="auth-field"><label>E-post</label><input type="email" id="authEmail" placeholder="deg@epost.no"></div>
+    <div class="auth-field"><label>Passord</label><input type="password" id="authPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSubmit()"></div>
+    <button class="auth-btn" onclick="authSubmit()" id="authBtn">Logg inn</button>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-msg" id="authMsg"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="app-shell">
+    <div class="app-nav">
+      <a href="#" class="logo" onclick="goLanding()" style="font-size:18px;text-decoration:none;">Skanly<span class="logo-dot">.</span></a>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:13px;color:var(--muted2);" id="navEmail"></span>
+        <button class="btn btn-primary" style="font-size:12px;padding:8px 16px;" onclick="visOppgrader()" id="upgradeBtn">⭐ Oppgrader</button>
+        <button id="themeBtn" onclick="toggleTheme()" title="Bytt tema" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:8px 12px;cursor:pointer;font-size:16px;">☀️</button>
+        <button onclick="loggUt()" style="background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.2);border-radius:6px;padding:8px 14px;cursor:pointer;font-size:12px;color:var(--red);font-family:Inter,sans-serif;">Logg ut</button>
+      </div>
+    </div>
+
+    <div class="app-layout">
+      <div class="app-sidebar">
+        <div class="sb-sec">Meny</div>
+        <div class="sb-item active" data-page="utgift" onclick="showPage('utgift',this)"><span class="sb-icon">📷</span> Legg inn utgift</div>
+        <div class="sb-item" data-page="faktura" onclick="showPage('faktura',this)"><span class="sb-icon">📄</span> Ny faktura</div>
+        <div class="sb-item" data-page="historikk" onclick="showPage('historikk',this)"><span class="sb-icon">🗂</span> Historikk</div>
+        <div class="sb-item" data-page="oversikt" onclick="showPage('oversikt',this)"><span class="sb-icon">📊</span> Oversikt</div>
+        <div class="sb-item" data-page="profil" onclick="showPage('profil',this)"><span class="sb-icon">👤</span> Min profil</div>
+      </div>
+
+      <div class="app-main">
+
+        <!-- UTGIFT -->
+        <div class="app-page active" id="page-utgift">
+          <div class="page-title">Legg inn utgift</div>
+          <div class="page-sub">Scan kvittering, lim inn tekst, eller fyll inn manuelt</div>
+
+          <div class="tabs">
+            <button class="tab active" onclick="switchUtgiftTab('scan',this)">📷 Scan / tekst</button>
+            <button class="tab" onclick="switchUtgiftTab('manuell',this)">✏️ Manuell</button>
+          </div>
+
+          <!-- SCAN TAB -->
+          <div id="utg-scan">
+            <div class="upload-zone" id="uploadZone">
+              <input type="file" accept="image/*" capture="environment" id="fileInput" onchange="handleFile(event)">
+              <div class="upload-icon">📷</div>
+              <div class="upload-title">Ta bilde eller last opp kvittering</div>
+              <div class="upload-sub">Slipp fil her eller <span>klikk for å velge</span></div>
+            </div>
+            <img class="img-preview" id="imgPreview">
+            <div class="or-div">eller lim inn tekst</div>
+            <div class="field" style="margin-bottom:12px;">
+              <textarea id="pasteInput" class="field" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:14px;color:var(--text);font-family:'Inter',sans-serif;width:100%;min-height:80px;resize:vertical;" placeholder="Lim inn kvitteringstekst eller beskriv kjøpet...&#10;Eks: «Rema 1000, 24.04, melk 27kr, brød 35kr, egg 60kr, total 122kr»"></textarea>
+            </div>
+            <button class="analyze-btn" onclick="analyzeUtgift()">🤖 Analyser med AI</button>
+            <div class="analyzing" id="analyzingState">
+              <div class="spinner"></div>
+              <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;">Leser kvitteringen...</div>
+            </div>
+            <div class="result-card" id="resultCard">
+              <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:18px;color:var(--accent);">✅ Kvittering lest</div>
+              <div class="result-grid" id="resultGrid"></div>
+              <div id="resultItems" style="margin-top:14px;"></div>
+              <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+                <button class="btn btn-primary" style="flex:1;" onclick="lagreUtgift()">💾 Lagre utgift</button>
+                <button class="btn btn-ghost" style="flex:1;" onclick="resetScan()">🔄 Ny</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- MANUELL TAB -->
+          <div id="utg-manuell" style="display:none;">
+            <div class="form-grid">
+              <div class="field"><label>Butikk / Leverandør</label><input type="text" id="m-butikk" placeholder="f.eks. Byggmakker"></div>
+              <div class="field"><label>Dato</label><input type="date" id="m-dato"></div>
+              <div class="field"><label>Kategori</label>
+                <select id="m-kat">
+                  <option value="Materialer">🔧 Materialer</option>
+                  <option value="Mat">🛒 Mat</option>
+                  <option value="Transport">⛽ Transport</option>
+                  <option value="Verktøy">🪛 Verktøy</option>
+                  <option value="Klær">👔 Klær / Arbeidstøy</option>
+                  <option value="Helse">💊 Helse</option>
+                  <option value="Restaurant">🍽️ Restaurant</option>
+                  <option value="Elektronikk">💻 Elektronikk</option>
+                  <option value="Diverse">📦 Diverse</option>
+                </select>
+              </div>
+              <div class="field"><label>Notat (valgfritt)</label><input type="text" id="m-notat" placeholder="f.eks. for oppdrag Andersen"></div>
+              <div class="field"><label>Bilagsnummer (valgfritt)</label><input type="text" id="m-bilag" placeholder="f.eks. B-2025-001"></div>
+            </div>
+
+            <div style="margin-bottom:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted2);">Varelinjer</div>
+            <div class="vare-header"><span>Beskrivelse</span><span>Antall</span><span>Enhet</span><span>Pris/enhet</span><span></span></div>
+            <div id="manuellVarer"></div>
+            <button class="add-vare-btn" onclick="addVare('manuellVarer')">+ Legg til varelinje</button>
+
+            <div class="total-box" id="manuellTotal">
+              <div class="total-row"><span>Antall linjer</span><span id="mt-linjer">0</span></div>
+              <div class="total-row big"><span>Totalt</span><span id="mt-total">0,00 kr</span></div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="lagreManuell()">💾 Lagre utgift</button>
+          </div>
+        </div>
+
+        <!-- FAKTURA -->
+        <div class="app-page" id="page-faktura">
+          <div class="page-title">Ny faktura</div>
+          <div class="page-sub">Fyll inn og send direkte til kunden</div>
+
+          <div class="form-grid">
+            <div class="field"><label>Ditt navn / Firma</label><input type="text" id="f-fra-navn" placeholder="Ola Nordmann AS"></div>
+            <div class="field"><label>Din e-post</label><input type="email" id="f-fra-epost" placeholder="ola@firma.no"></div>
+            <div class="field"><label>Din adresse</label><input type="text" id="f-fra-adr" placeholder="Gaten 1, 0001 Oslo"></div>
+            <div class="field"><label>Org.nr (valgfritt)</label><input type="text" id="f-org" placeholder="123 456 789"></div>
+          </div>
+
+          <div style="height:1px;background:var(--border);margin:16px 0;"></div>
+
+          <div class="form-grid">
+            <div class="field"><label>Kundenavn</label><input type="text" id="f-kunde-navn" placeholder="Kari Hansen"></div>
+            <div class="field"><label>Kundens e-post</label><input type="email" id="f-kunde-epost" placeholder="kari@epost.no"></div>
+            <div class="field form-full"><label>Kundens adresse</label><input type="text" id="f-kunde-adr" placeholder="Veien 2, 5000 Bergen"></div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field"><label>Faktura nr.</label><input type="text" id="f-nr" placeholder="2025-001"></div>
+            <div class="field"><label>Fakturadato</label><input type="date" id="f-dato"></div>
+            <div class="field"><label>Forfallsdato</label><input type="date" id="f-forfall"></div>
+            <div class="field"><label>MVA %</label><select id="f-mva"><option value="0">0%</option><option value="12">12%</option><option value="15">15%</option><option value="25" selected>25%</option></select></div>
+          </div>
+
+          <div style="margin-bottom:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted2);">Tjenester / Varer</div>
+          <div class="vare-header"><span>Beskrivelse</span><span>Antall</span><span>Enhet</span><span>Pris/enhet</span><span></span></div>
+          <div id="fakturaVarer"></div>
+          <button class="add-vare-btn" onclick="addVare('fakturaVarer')">+ Legg til linje</button>
+
+          <div class="total-box" id="fakturaTotal">
+            <div class="total-row"><span>Subtotal</span><span id="ft-sub">0,00 kr</span></div>
+            <div class="total-row"><span id="ft-mva-label">MVA (25%)</span><span id="ft-mva">0,00 kr</span></div>
+            <div class="total-row big"><span>Totalt</span><span id="ft-total">0,00 kr</span></div>
+          </div>
+
+          <div class="field" style="margin-bottom:16px;"><label>Notat til kunde (valgfritt)</label><textarea id="f-notat" placeholder="f.eks. Takk for oppdraget! Betaling til konto 1234.56.78901"></textarea></div>
+
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <button class="btn btn-primary" style="flex:1;" onclick="visForhandsvisning()">👁 Forhåndsvis faktura</button>
+            <button class="btn btn-ghost" style="flex:1;" onclick="lagreFaktura()">💾 Lagre uten å sende</button>
+          </div>
+
+          <div class="faktura-preview" id="fakturaPreview">
+            <div class="fp-header">
+              <div>
+                <div class="fp-logo">Skanly.</div>
+                <div style="font-size:13px;color:#666;margin-top:4px;" id="fp-fra-info"></div>
+              </div>
+              <div>
+                <div class="fp-title">FAKTURA</div>
+                <div class="fp-nr" id="fp-nr-dato"></div>
+              </div>
+            </div>
+            <div class="fp-parties">
+              <div class="fp-party"><div class="fp-party-label">Fra</div><div id="fp-fra"></div></div>
+              <div class="fp-party"><div class="fp-party-label">Til</div><div id="fp-til"></div></div>
+            </div>
+            <table class="fp-table">
+              <thead><tr><th>Beskrivelse</th><th>Antall</th><th>Enhet</th><th>Pris</th><th>Sum</th></tr></thead>
+              <tbody id="fp-tbody"></tbody>
+            </table>
+            <div class="fp-totals" id="fp-totals"></div>
+            <div style="margin-top:20px;font-size:13px;color:#666;" id="fp-notat"></div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+              <button class="btn btn-primary" style="flex:1;" onclick="sendFaktura()">📧 Send på e-post</button>
+              <button class="btn btn-ghost" onclick="skrivUtFaktura()">🖨️ Skriv ut / PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- HISTORIKK -->
+        <div class="app-page" id="page-historikk">
+          <div class="page-title">Historikk</div>
+          <div class="page-sub">Alle registrerte poster</div>
+
+          <div class="tabs">
+            <button class="tab active" onclick="switchHistTab('utgifter',this)">💸 Utgifter</button>
+            <button class="tab" onclick="switchHistTab('fakturaer',this)">📄 Fakturaer</button>
+          </div>
+          <input type="text" id="sokInput" placeholder="🔍 Søk på butikk, kunde, kategori..." oninput="sokIHistorikk(this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:14px;color:var(--text);font-family:Inter,sans-serif;margin-bottom:16px;">
+          <div id="hist-utgifter"><div class="item-list" id="utgiftListe"></div></div>
+          <div id="hist-fakturaer" style="display:none;"><div class="item-list" id="fakturaListe"></div></div>
+        </div>
+
+        <!-- PROFIL -->
+        <div class="app-page" id="page-profil">
+          <div class="page-title">Min profil</div>
+          <div class="page-sub">Lagres automatisk og fylles inn på alle fakturaer</div>
+          <div class="form-grid">
+            <div class="field"><label>Navn / Firma</label><input type="text" id="p-navn" placeholder="Ola Nordmann AS"></div>
+            <div class="field"><label>E-post</label><input type="email" id="p-epost" placeholder="post@firma.no"></div>
+            <div class="field"><label>Adresse</label><input type="text" id="p-adr" placeholder="Gaten 1, 0001 Oslo"></div>
+            <div class="field"><label>Org.nr</label><input type="text" id="p-org" placeholder="123 456 789"></div>
+            <div class="field"><label>Telefon</label><input type="tel" id="p-tlf" placeholder="+47 900 00 000"></div>
+            <div class="field"><label>Kontonummer</label><input type="text" id="p-konto" placeholder="1234.56.78901"></div>
+          </div>
+          <div class="field" style="margin-bottom:16px;"><label>Betalingsinstruksjon (vises på faktura)</label><textarea id="p-betalingsinstr" placeholder="Eks: Vipps 90123456 eller betal til konto 1234.56.78901"></textarea></div>
+          <button class="btn btn-primary" style="min-width:180px;" onclick="lagreProfil()">💾 Lagre profil</button>
+        </div>
+
+        <!-- OVERSIKT -->
+        <div class="app-page" id="page-oversikt">
+          <div class="page-title">Oversikt</div>
+          <div class="page-sub" id="oversiktMnd"></div>
+          <div class="stats-grid" id="statsGrid"></div>
+          <div class="cat-chart" id="catChart"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REDIGER UTGIFT MODAL -->
+<div class="overlay" id="redigerUtgiftOverlay">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-title">✏️ Rediger utgift</div>
+    <input type="hidden" id="edit-utg-id">
+    <div class="form-grid">
+      <div class="field"><label>Butikk</label><input type="text" id="edit-utg-butikk"></div>
+      <div class="field"><label>Dato</label><input type="date" id="edit-utg-dato"></div>
+      <div class="field"><label>Totalt (kr)</label><input type="number" id="edit-utg-totalt" step="any"></div>
+      <div class="field"><label>Kategori</label>
+        <select id="edit-utg-kat">
+          <option value="Materialer">Materialer</option><option value="Mat">Mat</option>
+          <option value="Transport">Transport</option><option value="Verktøy">Verktøy</option>
+          <option value="Klær">Klær</option><option value="Helse">Helse</option>
+          <option value="Restaurant">Restaurant</option><option value="Elektronikk">Elektronikk</option>
+          <option value="Diverse">Diverse</option>
+        </select>
+      </div>
+      <div class="field"><label>Bilagsnummer</label><input type="text" id="edit-utg-bilag" placeholder="B-2025-001"></div>
+      <div class="field"><label>Notat</label><input type="text" id="edit-utg-notat"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('redigerUtgiftOverlay').classList.remove('show')">Avbryt</button>
+      <button class="btn btn-primary" onclick="lagreRedigerUtgift()">Lagre</button>
+    </div>
+  </div>
+</div>
+
+<!-- REDIGER FAKTURA MODAL -->
+<div class="overlay" id="redigerFakturaOverlay">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-title">✏️ Rediger faktura</div>
+    <input type="hidden" id="edit-fak-id">
+    <div class="form-grid">
+      <div class="field"><label>Kundenavn</label><input type="text" id="edit-fak-kunde"></div>
+      <div class="field"><label>Kundens e-post</label><input type="email" id="edit-fak-epost"></div>
+      <div class="field"><label>Forfallsdato</label><input type="date" id="edit-fak-forfall"></div>
+      <div class="field"><label>Status</label>
+        <select id="edit-fak-status">
+          <option value="usendt">Usendt</option>
+          <option value="sendt">Sendt</option>
+          <option value="betalt">Betalt</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:16px;"><label>Notat</label><textarea id="edit-fak-notat"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('redigerFakturaOverlay').classList.remove('show')">Avbryt</button>
+      <button class="btn btn-primary" onclick="lagreRedigerFaktura()">Lagre</button>
+    </div>
+  </div>
+</div>
+
+<!-- UPGRADE MODAL -->
+<div class="overlay" id="upgradeOverlay">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-title">⭐ Velg din plan</div>
+    <p style="font-size:14px;color:var(--muted2);margin-bottom:4px;">Oppgrader for å fjerne alle begrensninger</p>
+    <div class="upgrade-grid">
+      <div class="upgrade-card" onclick="startCheckout('pro')">
+        <h3>Pro</h3>
+        <div class="pris">99<sub> kr/mnd</sub></div>
+        <ul>
+          <li>Ubegrenset utgifter</li>
+          <li>Ubegrenset fakturaer</li>
+          <li>AI-scanning</li>
+          <li>E-postsending</li>
+          <li>CSV-eksport</li>
+        </ul>
+        <button class="btn btn-primary" style="width:100%;margin-top:16px;justify-content:center;">Velg Pro →</button>
+      </div>
+      <div class="upgrade-card" onclick="startCheckout('bedrift')">
+        <h3>Bedrift</h3>
+        <div class="pris">249<sub> kr/mnd</sub></div>
+        <ul>
+          <li>Alt i Pro</li>
+          <li>Opptil 5 brukere</li>
+          <li>Regnskapseksport</li>
+          <li>Prioritert support</li>
+        </ul>
+        <button class="btn btn-ghost" style="width:100%;margin-top:16px;justify-content:center;">Velg Bedrift →</button>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:13px;color:var(--muted2);text-align:center;">
+      Sikker betaling via Stripe · Avbestill når som helst
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="document.getElementById('upgradeOverlay').classList.remove('show')">Lukk</button></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal">
+    <div class="modal-title" id="modalTitle"></div>
+    <div id="modalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Lukk</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── SUPABASE ──
+const { createClient } = supabase;
+const sb = createClient(
+  'https://geufbpitcscmtojvuwxp.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWZicGl0Y3NjbXRvanZ1d3hwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MDQ0MzQsImV4cCI6MjA5MzM4MDQzNH0.W_6v2s7G25sN16P4EVxRZOvrHgY-PqPQPCoPnzLjCwc'
+);
+
+let BRUKER_ID = null;
+let currentUser = null;
+
+// Auth state
+sb.auth.onAuthStateChange((event, session) => {
+  currentUser = session?.user || null;
+  BRUKER_ID = currentUser?.id || null;
+  if (currentUser) {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    goApp();
+    lastPlan();
+    setTimeout(sjekkForfalteFacturaer, 2000);
+  } else {
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('landing').style.display = 'none';
+  }
+});
+
+// ── NAV ──
+function goApp() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  window.scrollTo(0,0);
+  lastCurrent = null; lastResult = null;
+  setTimeout(lastProfil, 300);
+  const today = new Date().toISOString().split('T')[0];
+  const forfall = new Date(Date.now() + 14*86400000).toISOString().split('T')[0];
+  if(document.getElementById('m-dato')) document.getElementById('m-dato').value = today;
+  if(document.getElementById('f-dato')) document.getElementById('f-dato').value = today;
+  if(document.getElementById('f-forfall')) document.getElementById('f-forfall').value = forfall;
+  // Auto-increment faktura nr
+  const neste = (parseInt(localStorage.getItem('skanly_faktura_nr')||'0')+1);
+  const aar = new Date().getFullYear();
+  if(document.getElementById('f-nr')) document.getElementById('f-nr').value = `FAK-${år}-${String(neste).padStart(3,'0')}`;
+  // Restore saved sender info
+  const lagret = JSON.parse(localStorage.getItem('skanly_avsender')||'{}');
+  ['f-fra-navn','f-fra-epost','f-fra-adr','f-org'].forEach(id => {
+    const key = id.replace('f-fra-','').replace('f-','');
+    if(lagret[key] && document.getElementById(id)) document.getElementById(id).value = lagret[key];
+  });
+  if(document.getElementById('manuellVarer').children.length === 0) addVare('manuellVarer');
+  if(document.getElementById('fakturaVarer').children.length === 0) addVare('fakturaVarer');
+  lastendreOversikt();
+}
+function goLanding() {
+  document.getElementById('landing').style.display = 'block';
+  document.getElementById('app').style.display = 'none';
+}
+function showPage(name, el) {
+  document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  if (name === 'historikk') lastHistorikkTab === 'fakturaer' ? lastendreHistFakturaer() : lastendreHistUtgifter();
+  if (name === 'oversikt') lastendreOversikt();
+}
+function switchUtgiftTab(name, el) {
+  document.getElementById('utg-scan').style.display = name==='scan'?'block':'none';
+  document.getElementById('utg-manuell').style.display = name==='manuell'?'block':'none';
+  document.querySelectorAll('.tabs')[0].querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+let lastHistorikkTab = 'utgifter';
+function switchHistTab(name, el) {
+  lastHistorikkTab = name;
+  document.getElementById('hist-utgifter').style.display = name==='utgifter'?'block':'none';
+  document.getElementById('hist-fakturaer').style.display = name==='fakturaer'?'block':'none';
+  document.querySelectorAll('.tabs')[2] && document.querySelectorAll('.tabs')[2].querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(name==='utgifter') lastendreHistUtgifter();
+  else lastendreHistFakturaer();
+}
+
+// ── TOAST ──
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ── MODAL ──
+function openModal(title, body) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = body;
+  document.getElementById('overlay').classList.add('show');
+}
+function closeModal() { document.getElementById('overlay').classList.remove('show'); }
+document.getElementById('overlay').addEventListener('click', e => { if(e.target.id==='overlay') closeModal(); });
+
+// ── FILE UPLOAD ──
+let uploadedImageBase64 = null;
+function handleFile(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    uploadedImageBase64 = ev.target.result;
+    const preview = document.getElementById('imgPreview');
+    preview.src = uploadedImageBase64; preview.style.display = 'block';
+    document.getElementById('uploadZone').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+zone.addEventListener('drop', e => {
+  e.preventDefault(); zone.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) handleFile({ target: { files: [file] } });
+});
+
+// ── AI ANALYZE ──
+let lastResult = null;
+let lastCurrent = null;
+
+const catColors = { 'Mat':'var(--yellow)','Transport':'var(--blue)','Klær':'var(--purple)','Helse':'var(--red)','Restaurant':'var(--accent)','Underholdning':'var(--purple)','Elektronikk':'var(--blue)','Materialer':'var(--orange)','Verktøy':'var(--orange)','Diverse':'var(--muted2)' };
+const catEmojis = { 'Mat':'🛒','Transport':'⛽','Klær':'👔','Helse':'💊','Restaurant':'🍽️','Underholdning':'🎬','Elektronikk':'💻','Materialer':'🔧','Verktøy':'🪛','Diverse':'📦' };
+
+async function analyzeUtgift() {
+  const text = document.getElementById('pasteInput').value.trim();
+  if (!text && !uploadedImageBase64) { toast('Last opp bilde eller lim inn tekst'); return; }
+  document.getElementById('analyzeBtn') && (document.getElementById('analyzeBtn').style.display='none');
+  document.getElementById('analyzingState').style.display = 'block';
+  document.getElementById('resultCard').classList.remove('show');
+  try {
+    let messages;
+    if (uploadedImageBase64) {
+      const base64 = uploadedImageBase64.split(',')[1];
+      const mediaType = uploadedImageBase64.split(';')[0].split(':')[1];
+      messages = [{ role:'user', content:[
+        { type:'image', source:{ type:'base64', media_type:mediaType, data:base64 }},
+        { type:'text', text: text ? `Analyser denne kvitteringen. Ekstra info: ${text}` : 'Analyser denne kvitteringen.' }
+      ]}];
+    } else {
+      messages = [{ role:'user', content:`Analyser: ${text}` }];
+    }
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        system:`Du er en kvitteringsanalysator. Returner KUN gyldig JSON:
+{"butikk":"navn","dato":"YYYY-MM-DD","totalt":0.00,"kategori":"Mat|Transport|Klær|Helse|Restaurant|Underholdning|Elektronikk|Materialer|Verktøy|Diverse","poster":[{"navn":"vare","antall":1,"enhet":"stk","pris":0.00}]}`,
+        messages
+      })
+    });
+    const data = await res.json();
+    const raw = data.content.map(i=>i.text||'').join('');
+    lastResult = JSON.parse(raw.replace(/```json|```/g,'').trim());
+  } catch(e) {
+    const t = document.getElementById('pasteInput').value;
+    lastResult = { butikk: t.split(/[\n,]/)[0].substring(0,30)||'Ukjent', dato: new Date().toISOString().split('T')[0], totalt: 0, kategori:'Diverse', poster:[] };
+  }
+  renderScanResult(lastResult);
+  document.getElementById('analyzingState').style.display='none';
+}
+
+function renderScanResult(d) {
+  const color = catColors[d.kategori]||'var(--muted2)';
+  const emoji = catEmojis[d.kategori]||'📦';
+  const dato = d.dato ? new Date(d.dato).toLocaleDateString('no-NO',{day:'numeric',month:'short',year:'numeric'}) : '-';
+  document.getElementById('resultGrid').innerHTML = `
+    <div class="result-item"><div class="ri-label">Butikk</div><div class="ri-value">${d.butikk}</div></div>
+    <div class="result-item"><div class="ri-label">Totalt</div><div class="ri-value green">${fmtKr(d.totalt)}</div></div>
+    <div class="result-item"><div class="ri-label">Dato</div><div class="ri-value">${dato}</div></div>
+    <div class="result-item"><div class="ri-label">Kategori</div><div class="ri-value"><span class="cat-pill" style="background:${color}18;color:${color}">${emoji} ${d.kategori}</span></div></div>`;
+  if (d.poster && d.poster.length) {
+    document.getElementById('resultItems').innerHTML = `<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px;">Varelinjer</div>` +
+      d.poster.map(p=>`<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:6px;margin-bottom:5px;font-size:14px;"><span>${p.navn} × ${p.antall} ${p.enhet||'stk'}</span><span style="color:var(--muted2)">${fmtKr(p.pris)}</span></div>`).join('');
+  } else document.getElementById('resultItems').innerHTML = '';
+  document.getElementById('resultCard').classList.add('show');
+  document.getElementById('resultCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+  lastCurrent = d;
+}
+
+async function lagreUtgift() {
+  const ok = await sjekkGrenser('utgifter');
+  if (!ok) return;
+  if (!lastCurrent) return;
+  const { error } = await sb.from('utgifter').insert({
+    user_id: BRUKER_ID, butikk: lastCurrent.butikk, dato: lastCurrent.dato||new Date().toISOString().split('T')[0],
+    totalt: lastCurrent.totalt||0, kategori: lastCurrent.kategori||'Diverse',
+    kategori_emoji: catEmojis[lastCurrent.kategori]||'📦', type:'kvittering',
+    poster: lastCurrent.poster||[]
+  });
+  if (error) { toast('❌ Feil ved lagring'); return; }
+  toast('✅ Utgift lagret!');
+  resetScan();
+}
+
+function resetScan() {
+  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('imgPreview').style.display='none';
+  document.getElementById('uploadZone').style.display='block';
+  document.getElementById('pasteInput').value='';
+  document.getElementById('fileInput').value='';
+  uploadedImageBase64=null; lastResult=null; lastCurrent=null;
+}
+
+// ── VARELINJER ──
+function addVare(containerId) {
+  const div = document.createElement('div');
+  div.className = 'vare-row';
+  div.innerHTML = `
+    <input data-felt="navn" type="text" placeholder="Beskrivelse (f.eks. Stål 20mm)" oninput="oppdaterTotal('${containerId}')">
+    <input data-felt="antall" type="number" placeholder="1" min="0" step="any" oninput="oppdaterTotal('${containerId}')">
+    <select data-felt="enhet" onchange="oppdaterTotal('${containerId}')">
+      <option>stk</option><option>m</option><option>m²</option><option>m³</option>
+      <option>kg</option><option>liter</option><option>time</option><option>dag</option>
+    </select>
+    <input data-felt="pris" type="number" placeholder="0.00" min="0" step="any" oninput="oppdaterTotal('${containerId}')">
+    <div class="vare-del" onclick="this.parentElement.remove();oppdaterTotal('${containerId}')">×</div>`;
+  document.getElementById(containerId).appendChild(div);
+}
+
+function getVarer(containerId) {
+  return Array.from(document.getElementById(containerId).querySelectorAll('.vare-row')).map(row => {
+    const navn = row.querySelector('[data-felt="navn"]')?.value || '';
+    const antall = parseFloat(row.querySelector('[data-felt="antall"]')?.value) || 0;
+    const enhet = row.querySelector('[data-felt="enhet"]')?.value || 'stk';
+    const pris = parseFloat(row.querySelector('[data-felt="pris"]')?.value) || 0;
+    return { navn, antall, enhet, pris };
+  }).filter(v => v.navn || v.antall || v.pris);
+}
+
+function oppdaterTotal(id) {
+  const varer = getVarer(id);
+  const sub = varer.reduce((s,v)=>s+(v.antall*v.pris),0);
+  if (id==='manuellVarer') {
+    document.getElementById('mt-linjer').textContent = varer.length;
+    document.getElementById('mt-total').textContent = fmtKr(sub);
+  } else if (id==='fakturaVarer') {
+    const mva = (parseFloat(document.getElementById('f-mva').value)||0)/100;
+    document.getElementById('ft-sub').textContent = fmtKr(sub);
+    document.getElementById('ft-mva-label').textContent = `MVA (${(mva*100).toFixed(0)}%)`;
+    document.getElementById('ft-mva').textContent = fmtKr(sub*mva);
+    document.getElementById('ft-total').textContent = fmtKr(sub*(1+mva));
+  }
+}
+
+document.getElementById('f-mva') && document.getElementById('f-mva').addEventListener('change', ()=>oppdaterTotal('fakturaVarer'));
+
+async function lagreManuell() {
+  const ok = await sjekkGrenser('utgifter');
+  if (!ok) return;
+  const butikk = document.getElementById('m-butikk').value.trim();
+  if (!butikk) { toast('Fyll inn butikk/leverandor'); return; }
+  const varer = getVarer('manuellVarer');
+  const totalt = varer.reduce((s,v)=>s+(v.antall*v.pris),0);
+  const kat = document.getElementById('m-kat').value;
+  const { error } = await sb.from('utgifter').insert({
+    bruker_id:BRUKER_ID, butikk, dato:document.getElementById('m-dato').value,
+    totalt, kategori:kat, kategori_emoji:catEmojis[kat]||'📦',
+    type:'manuell', poster:varer, notater:document.getElementById('m-notat').value,
+    bilag_nr: document.getElementById('m-bilag')?.value||null
+  });
+  if (error) { toast('❌ Feil: '+error.message); return; }
+  toast('✅ Utgift lagret!');
+  document.getElementById('m-butikk').value=''; document.getElementById('m-notat').value='';
+  document.getElementById('manuellVarer').innerHTML=''; addVare('manuellVarer');
+}
+
+// ── FAKTURA ──
+function visForhandsvisning() {
+  const fraNavn = document.getElementById('f-fra-navn').value||'Ditt firma';
+  const fraEpost = document.getElementById('f-fra-epost').value;
+  const fraAdr = document.getElementById('f-fra-adr').value;
+  const org = document.getElementById('f-org').value;
+  const kundeNavn = document.getElementById('f-kunde-navn').value||'Kunde';
+  const kundeEpost = document.getElementById('f-kunde-epost').value;
+  const kundeAdr = document.getElementById('f-kunde-adr').value;
+  const nr = document.getElementById('f-nr').value;
+  const dato = document.getElementById('f-dato').value;
+  const forfall = document.getElementById('f-forfall').value;
+  const mva = parseFloat(document.getElementById('f-mva').value)||0;
+  const varer = getVarer('fakturaVarer');
+  const notat = document.getElementById('f-notat').value;
+
+  document.getElementById('fp-fra-info').innerHTML = `${fraEpost}<br>${fraAdr}${org?'<br>Org.nr: '+org:''}`;
+  document.getElementById('fp-nr-dato').innerHTML = `Nr: ${nr}<br>Dato: ${dato}<br>Forfall: ${forfall}`;
+  document.getElementById('fp-fra').innerHTML = `<h4>${fraNavn}</h4><p>${fraEpost}<br>${fraAdr}${org?'<br>Org.nr: '+org:''}</p>`;
+  document.getElementById('fp-til').innerHTML = `<h4>${kundeNavn}</h4><p>${kundeEpost}<br>${kundeAdr}</p>`;
+
+  const sub = varer.reduce((s,v)=>s+(v.antall*v.pris),0);
+  const mvaKr = sub*(mva/100);
+  document.getElementById('fp-tbody').innerHTML = varer.map(v=>`<tr><td>${v.navn}</td><td>${v.antall}</td><td>${v.enhet}</td><td>${fmtKr(v.pris)}</td><td>${fmtKr(v.antall*v.pris)}</td></tr>`).join('');
+  document.getElementById('fp-totals').innerHTML = `<div class="fp-total-row"><span>Subtotal</span><span>${fmtKr(sub)}</span></div><div class="fp-total-row"><span>MVA ${mva}%</span><span>${fmtKr(mvaKr)}</span></div><div class="fp-total-row final"><span>Totalt å betale</span><span>${fmtKr(sub+mvaKr)}</span></div>`;
+  document.getElementById('fp-notat').textContent = notat;
+
+  const preview = document.getElementById('fakturaPreview');
+  preview.classList.add('show');
+  preview.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+async function lagreFaktura(status='usendt') {
+  if (status === 'usendt' || status === 'sendt') {
+    const ok = await sjekkGrenser('fakturaer');
+    if (!ok) return false;
+  }
+  const varer = getVarer('fakturaVarer');
+  const sub = varer.reduce((s,v)=>s+(v.antall*v.pris),0);
+  const mva = parseFloat(document.getElementById('f-mva').value)||0;
+  const totalt = sub*(1+mva/100);
+  // Save sender info for next time
+  const avsender = {
+    navn: document.getElementById('f-fra-navn').value,
+    epost: document.getElementById('f-fra-epost').value,
+    adr: document.getElementById('f-fra-adr').value,
+    org: document.getElementById('f-org').value,
+  };
+  localStorage.setItem('skanly_avsender', JSON.stringify(avsender));
+  // Increment faktura counter
+  const curr = parseInt(localStorage.getItem('skanly_faktura_nr')||'0');
+  localStorage.setItem('skanly_faktura_nr', curr+1);
+  const { error } = await sb.from('fakturaer').insert({
+    bruker_id:BRUKER_ID,
+    faktura_nr: document.getElementById('f-nr').value||'FAK-1',
+    kunde_navn: document.getElementById('f-kunde-navn').value||'Kunde',
+    kunde_epost: document.getElementById('f-kunde-epost').value,
+    kunde_adresse: document.getElementById('f-kunde-adr').value,
+    dato: document.getElementById('f-dato').value,
+    forfall: document.getElementById('f-forfall').value,
+    poster: varer, totalt, mva:sub*(mva/100),
+    status, notat: document.getElementById('f-notat').value
+  });
+  if (error) { toast('❌ '+error.message); return false; }
+  return true;
+}
+
+async function sendFaktura() {
+  const ok = await lagreFaktura('sendt');
+  if (!ok) return;
+  const epost = document.getElementById('f-kunde-epost').value;
+  if (!epost) { toast('⚠️ Fyll inn kundens e-post for å sende'); return; }
+
+  toast('📧 Sender faktura...');
+  const varer = getVarer('fakturaVarer');
+  const sub = varer.reduce((s,v)=>s+(v.antall*v.pris),0);
+  const mva = parseFloat(document.getElementById('f-mva').value)||0;
+
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch('https://geufbpitcscmtojvuwxp.supabase.co/functions/v1/send-faktura', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({
+        til: epost,
+        fraFirma: document.getElementById('f-fra-navn').value,
+        fraEpost: document.getElementById('f-fra-epost').value,
+        fakturaData: {
+          faktura_nr: document.getElementById('f-nr').value,
+          kunde_navn: document.getElementById('f-kunde-navn').value,
+          poster: varer,
+          totalt: sub*(1+mva/100),
+          mva: sub*(mva/100),
+          notat: document.getElementById('f-notat').value
+        }
+      })
+    });
+    const json = await res.json();
+    if (json.ok) toast(`✅ Faktura sendt til ${epost}!`);
+    else toast('❌ Sending feilet: ' + json.error);
+  } catch(e) {
+    toast('❌ Kunne ikke sende: ' + e.message);
+  }
+}
+
+function skrivUtFaktura() {
+  const preview = document.getElementById('fakturaPreview');
+  const original = document.body.innerHTML;
+  document.body.innerHTML = preview.outerHTML.replace('display:flex','display:block');
+  window.print();
+  document.body.innerHTML = original;
+  window.location.reload();
+}
+
+// ── HISTORIKK ──
+async function lastendreHistUtgifter(sok='') {
+  let q = sb.from('utgifter').select('*').eq('user_id',BRUKER_ID).order('dato',{ascending:false});
+  const { data, error } = await q;
+  const el = document.getElementById('utgiftListe');
+  let liste = data||[];
+  if(sok) liste = liste.filter(u=>u.butikk.toLowerCase().includes(sok.toLowerCase())||u.kategori?.toLowerCase().includes(sok.toLowerCase()));
+  if (error || liste.length===0) { el.innerHTML=`<div class="empty-state"><div class="e-icon">📭</div><h3>${sok?'Ingen treff':'Ingen utgifter ennå'}</h3><p>${sok?'Prøv et annet søkeord':'Legg inn din første utgift'}</p></div>`; return; }
+  el.innerHTML = liste.map(u=>`
+    <div class="list-item" style="position:relative;">
+      <div class="li-left"><span class="li-emoji">${u.kategori_emoji||'📦'}</span><div class="li-info"><h4>${u.butikk}${u.bilag_nr?' <span style="font-size:11px;color:var(--muted);">#'+u.bilag_nr+'</span>':''}</h4><p>${u.kategori||'Diverse'} · ${u.type==='manuell'?'Manuell':'Kvittering'}</p></div></div>
+      <div class="li-right" style="display:flex;align-items:center;gap:8px;">
+        <div style="text-align:right;"><div class="li-amount" style="color:${catColors[u.kategori]||'var(--accent)'}">${fmtKr(u.totalt)}</div><div class="li-date">${new Date(u.dato).toLocaleDateString('no-NO',{day:'numeric',month:'short'})}</div></div>
+        <button onclick="apneRedigerUtgift('${u.id}')" style="background:rgba(79,172,254,0.1);border:1px solid rgba(79,172,254,0.2);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;color:var(--blue);font-family:Inter,sans-serif;" title="Rediger">✏️</button>
+        <button onclick="slettUtgift('${u.id}')" style="background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.2);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;color:var(--red);font-family:Inter,sans-serif;" title="Slett">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+async function slettUtgift(id) {
+  if(!confirm('Slett denne utgiften?')) return;
+  const { error } = await sb.from('utgifter').delete().eq('id',id);
+  if(error) { toast('❌ Kunne ikke slette'); return; }
+  toast('🗑 Utgift slettet');
+  lastendreHistUtgifter();
+  lastendreOversikt();
+}
+
+async function lastendreHistFakturaer(sok='') {
+  const { data, error } = await sb.from('fakturaer').select('*').eq('user_id',BRUKER_ID).order('dato',{ascending:false});
+  const el = document.getElementById('fakturaListe');
+  let liste = data||[];
+  if(sok) liste = liste.filter(f=>f.kunde_navn.toLowerCase().includes(sok.toLowerCase())||f.faktura_nr.toLowerCase().includes(sok.toLowerCase()));
+  if (error || liste.length===0) { el.innerHTML=`<div class="empty-state"><div class="e-icon">📭</div><h3>${sok?'Ingen treff':'Ingen fakturaer ennå'}</h3><p>${sok?'Prøv et annet søkeord':'Lag din første faktura'}</p></div>`; return; }
+  el.innerHTML = liste.map(f=>`
+    <div class="list-item">
+      <div class="li-left"><span class="li-emoji">📄</span><div class="li-info"><h4>${f.kunde_navn} – ${f.faktura_nr}</h4><p>Forfall: ${new Date(f.forfall).toLocaleDateString('no-NO',{day:'numeric',month:'short'})}</p></div></div>
+      <div class="li-right" style="display:flex;align-items:center;gap:10px;">
+        <div style="text-align:right;"><div class="li-amount">${fmtKr(f.totalt)}</div><div class="li-date"><span class="status-badge s-${f.status}">${f.status}</span></div></div>
+        ${f.status!=='betalt'?`<button onclick="markerBetalt('${f.id}')" style="background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.2);border-radius:6px;padding:6px 8px;cursor:pointer;font-size:12px;color:var(--accent);font-family:Inter,sans-serif;white-space:nowrap;" title="Marker betalt">✓ Betalt</button>`:''}
+        <button onclick="apneRedigerFaktura('${f.id}')" style="background:rgba(79,172,254,0.1);border:1px solid rgba(79,172,254,0.2);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;color:var(--blue);font-family:Inter,sans-serif;" title="Rediger">✏️</button>
+        <button onclick="slettFaktura('${f.id}')" style="background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.2);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;color:var(--red);font-family:Inter,sans-serif;" title="Slett">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+async function markerBetalt(id) {
+  const { error } = await sb.from('fakturaer').update({status:'betalt'}).eq('id',id);
+  if(error) { toast('❌ Feil'); return; }
+  toast('✅ Faktura markert som betalt!');
+  lastendreHistFakturaer(); lastendreOversikt();
+}
+
+async function slettFaktura(id) {
+  if(!confirm('Slett denne fakturaen?')) return;
+  const { error } = await sb.from('fakturaer').delete().eq('id',id);
+  if(error) { toast('❌ Kunne ikke slette'); return; }
+  toast('🗑 Faktura slettet');
+  lastendreHistFakturaer();
+}
+
+// ── OVERSIKT ──
+async function lastendreOversikt() {
+  const naa = new Date();
+  const mndNavn = naa.toLocaleDateString('no-NO',{month:'long',year:'numeric'});
+  document.getElementById('oversiktMnd').textContent = mndNavn.charAt(0).toUpperCase()+mndNavn.slice(1);
+
+  const fraStr = new Date(naa.getFullYear(),naa.getMonth(),1).toISOString().split('T')[0];
+  const { data:utg } = await sb.from('utgifter').select('*').eq('user_id',BRUKER_ID).gte('dato',fraStr);
+  const { data:fak } = await sb.from('fakturaer').select('*').eq('user_id',BRUKER_ID).eq('status','betalt').gte('dato',fraStr);
+
+  const totalUtg = (utg||[]).reduce((s,u)=>s+Number(u.totalt),0);
+  const totalFak = (fak||[]).reduce((s,f)=>s+Number(f.totalt),0);
+  const antUtg = (utg||[]).length;
+  const antFak = (fak||[]).length;
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Totale utgifter</div><div class="stat-value">${fmtKr(totalUtg)}</div><div class="stat-sub">${antUtg} poster</div></div>
+    <div class="stat-card"><div class="stat-label">Fakturert</div><div class="stat-value green">${fmtKr(totalFak)}</div><div class="stat-sub">${antFak} betalt</div></div>
+    <div class="stat-card"><div class="stat-label">Snitt per utgift</div><div class="stat-value">${antUtg>0?fmtKr(totalUtg/antUtg):'0 kr'}</div><div class="stat-sub">denne måneden</div></div>
+    <div class="stat-card"><div class="stat-label">Resultat</div><div class="stat-value" style="color:${totalFak-totalUtg>=0?'var(--accent)':'var(--red)'}">${fmtKr(totalFak-totalUtg)}</div><div class="stat-sub">inn minus ut</div></div>`;
+
+  // Kategori breakdown
+  const katTotals = {};
+  (utg||[]).forEach(u=>{ katTotals[u.kategori]=(katTotals[u.kategori]||0)+Number(u.totalt); });
+  const sorted = Object.entries(katTotals).sort((a,b)=>b[1]-a[1]);
+  const max = sorted[0]?.[1]||1;
+  document.getElementById('catChart').innerHTML = `<h3 style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:18px;">Fordeling per kategori</h3>` +
+    (sorted.length===0 ? '<div style="color:var(--muted2);font-size:14px;">Ingen data denne måneden</div>' :
+    sorted.map(([kat,tot])=>`
+      <div class="cat-row">
+        <span class="cat-lbl">${catEmojis[kat]||'📦'} ${kat}</span>
+        <div class="cat-track"><div class="cat-fill" style="width:${(tot/max*100).toFixed(0)}%;background:${catColors[kat]||'var(--muted2)'}"></div></div>
+        <span class="cat-val" style="color:${catColors[kat]||'var(--muted2)'}">${fmtKr(tot)}</span>
+      </div>`).join('')) +
+    `<div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">
+      <button class="btn btn-ghost" onclick="eksporterCSV()">📥 Last ned CSV</button>
+    </div>`;
+}
+
+function sokIHistorikk(v) {
+  if(lastHistorikkTab==='utgifter') lastendreHistUtgifter(v);
+  else lastendreHistFakturaer(v);
+}
+
+async function eksporterCSV() {
+  const { data } = await sb.from('utgifter').select('*').eq('user_id',BRUKER_ID).order('dato',{ascending:false});
+  if (!data||data.length===0) { toast('Ingen data aa eksportere'); return; }
+  const csv = ['Dato,Butikk,Kategori,Totalt,Type,Notat',
+    ...data.map(u=>`${u.dato},"${u.butikk}","${u.kategori}",${u.totalt},"${u.type}","${u.notater||''}"`)].join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='skanly-utgifter.csv'; a.click();
+}
+
+// ── PLAN ──
+let currentPlan = 'gratis';
+
+const PLAN_LIMITS = {
+  gratis: { utgifter: 10, fakturaer: 3 },
+  pro: { utgifter: Infinity, fakturaer: Infinity },
+  bedrift: { utgifter: Infinity, fakturaer: Infinity }
+};
+
+async function lastPlan() {
+  if (!BRUKER_ID) return;
+  const { data } = await sb.from('abonnement').select('plan,status').eq('user_id', BRUKER_ID).single();
+  currentPlan = (data?.status === 'active' ? data?.plan : 'gratis') || 'gratis';
+
+  // Update nav badge
+  const labels = { gratis:'Gratis', pro:'Pro ⭐', bedrift:'Bedrift 🏢' };
+  const classes = { gratis:'plan-gratis', pro:'plan-pro', bedrift:'plan-bedrift' };
+  document.getElementById('navEmail').innerHTML = `<span class="plan-badge ${classes[currentPlan]}">${labels[currentPlan]}</span> ${currentUser?.email||''}`;
+
+  // Hide upgrade button if on paid plan
+  if (currentPlan !== 'gratis') {
+    const btn = document.getElementById('upgradeBtn');
+    if (btn) btn.style.display = 'none';
+  }
+}
+
+async function sjekkGrenser(type) {
+  const limit = PLAN_LIMITS[currentPlan][type];
+  if (limit === Infinity) return true;
+
+  const now = new Date();
+  const fraStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  const tabell = type === 'utgifter' ? 'utgifter' : 'fakturaer';
+  const { count } = await sb.from(tabell).select('*', { count: 'exact', head: true })
+    .eq('user_id', BRUKER_ID).gte('created_at', fraStr);
+
+  if ((count || 0) >= limit) {
+    visOppgrader("Du har naadd grensen pa " + limit + " " + type + " per maned pa gratis-planen.");
+    return false;
+  }
+  return true;
+}
+
+function visOppgrader(msg) {
+  document.getElementById('upgradeOverlay').classList.add('show');
+}
+
+async function startCheckout(plan) {
+  toast('Kobler til Stripe...');
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const url = window.location.href.split('?')[0];
+    const res = await fetch('https://geufbpitcscmtojvuwxp.supabase.co/functions/v1/stripe-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ plan, successUrl: url, cancelUrl: url })
+    });
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+    else toast('❌ ' + (data.error || 'Feil ved betaling'));
+  } catch(e) {
+    toast('❌ ' + e.message);
+  }
+}
+
+// Check for successful payment on return
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('session_id')) {
+  setTimeout(() => { toast('✅ Betaling mottatt! Planen din er aktivert.'); lastPlan(); }, 1000);
+  window.history.replaceState({}, '', window.location.pathname);
+}
+
+// ── AUTH ──
+let authMode = 'login';
+
+function switchAuthTab(mode, el) {
+  authMode = mode;
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('authBtn').textContent = mode==='login' ? 'Logg inn' : 'Opprett konto';
+  document.getElementById('authError').textContent = '';
+  document.getElementById('authMsg').textContent = '';
+}
+
+async function authSubmit() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  document.getElementById('authError').textContent = '';
+  document.getElementById('authMsg').textContent = '';
+  if (!email || !pass) { document.getElementById('authError').textContent = 'Fyll inn e-post og passord'; return; }
+
+  if (authMode === 'login') {
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) document.getElementById('authError').textContent = 'Feil e-post eller passord';
+  } else {
+    const { error } = await sb.auth.signUp({ email, password: pass });
+    if (error) document.getElementById('authError').textContent = error.message;
+    else document.getElementById('authMsg').textContent = '✅ Sjekk e-posten din for bekreftelse!';
+  }
+}
+
+async function loggUt() {
+  await sb.auth.signOut();
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ── PROFIL ──
+async function lastProfil() {
+  const lagret = JSON.parse(localStorage.getItem('skanly_profil')||'{}');
+  ['navn','epost','adr','org','tlf','konto','betalingsinstr'].forEach(k => {
+    const el = document.getElementById('p-'+k);
+    if (el && lagret[k]) el.value = lagret[k];
+  });
+  if (lagret.navn && document.getElementById('f-fra-navn') && !document.getElementById('f-fra-navn').value) document.getElementById('f-fra-navn').value = lagret.navn;
+  if (lagret.epost && document.getElementById('f-fra-epost') && !document.getElementById('f-fra-epost').value) document.getElementById('f-fra-epost').value = lagret.epost;
+  if (lagret.adr && document.getElementById('f-fra-adr') && !document.getElementById('f-fra-adr').value) document.getElementById('f-fra-adr').value = lagret.adr;
+  if (lagret.org && document.getElementById('f-org') && !document.getElementById('f-org').value) document.getElementById('f-org').value = lagret.org;
+  if (lagret.betalingsinstr && document.getElementById('f-notat') && !document.getElementById('f-notat').value) document.getElementById('f-notat').value = lagret.betalingsinstr;
+}
+
+function lagreProfil() {
+  const profil = {
+    navn: document.getElementById('p-navn')?.value||'',
+    epost: document.getElementById('p-epost')?.value||'',
+    adr: document.getElementById('p-adr')?.value||'',
+    org: document.getElementById('p-org')?.value||'',
+    tlf: document.getElementById('p-tlf')?.value||'',
+    konto: document.getElementById('p-konto')?.value||'',
+    betalingsinstr: document.getElementById('p-betalingsinstr')?.value||''
+  };
+  localStorage.setItem('skanly_profil', JSON.stringify(profil));
+  localStorage.setItem('skanly_avsender', JSON.stringify({ navn:profil.navn, epost:profil.epost, adr:profil.adr, org:profil.org }));
+  toast('✅ Profil lagret!');
+}
+
+// ── REDIGER UTGIFT ──
+async function apneRedigerUtgift(id) {
+  const { data } = await sb.from('utgifter').select('*').eq('id',id).single();
+  if (!data) return;
+  document.getElementById('edit-utg-id').value = data.id;
+  document.getElementById('edit-utg-butikk').value = data.butikk||'';
+  document.getElementById('edit-utg-dato').value = data.dato||'';
+  document.getElementById('edit-utg-totalt').value = data.totalt||0;
+  document.getElementById('edit-utg-kat').value = data.kategori||'Diverse';
+  document.getElementById('edit-utg-bilag').value = data.bilag_nr||'';
+  document.getElementById('edit-utg-notat').value = data.notater||'';
+  document.getElementById('redigerUtgiftOverlay').classList.add('show');
+}
+
+async function lagreRedigerUtgift() {
+  const id = document.getElementById('edit-utg-id').value;
+  const kat = document.getElementById('edit-utg-kat').value;
+  const { error } = await sb.from('utgifter').update({
+    butikk: document.getElementById('edit-utg-butikk').value,
+    dato: document.getElementById('edit-utg-dato').value,
+    totalt: parseFloat(document.getElementById('edit-utg-totalt').value)||0,
+    kategori: kat, kategori_emoji: catEmojis[kat]||'📦',
+    bilag_nr: document.getElementById('edit-utg-bilag').value||null,
+    notater: document.getElementById('edit-utg-notat').value,
+    updated_at: new Date().toISOString()
+  }).eq('id',id);
+  if (error) { toast('❌ '+error.message); return; }
+  document.getElementById('redigerUtgiftOverlay').classList.remove('show');
+  toast('✅ Utgift oppdatert!');
+  lastendreHistUtgifter(); lastendreOversikt();
+}
+
+// ── REDIGER FAKTURA ──
+async function apneRedigerFaktura(id) {
+  const { data } = await sb.from('fakturaer').select('*').eq('id',id).single();
+  if (!data) return;
+  document.getElementById('edit-fak-id').value = data.id;
+  document.getElementById('edit-fak-kunde').value = data.kunde_navn||'';
+  document.getElementById('edit-fak-epost').value = data.kunde_epost||'';
+  document.getElementById('edit-fak-forfall').value = data.forfall||'';
+  document.getElementById('edit-fak-status').value = data.status||'usendt';
+  document.getElementById('edit-fak-notat').value = data.notat||'';
+  document.getElementById('redigerFakturaOverlay').classList.add('show');
+}
+
+async function lagreRedigerFaktura() {
+  const id = document.getElementById('edit-fak-id').value;
+  const { error } = await sb.from('fakturaer').update({
+    kunde_navn: document.getElementById('edit-fak-kunde').value,
+    kunde_epost: document.getElementById('edit-fak-epost').value,
+    forfall: document.getElementById('edit-fak-forfall').value,
+    status: document.getElementById('edit-fak-status').value,
+    notat: document.getElementById('edit-fak-notat').value,
+    updated_at: new Date().toISOString()
+  }).eq('id',id);
+  if (error) { toast('❌ '+error.message); return; }
+  document.getElementById('redigerFakturaOverlay').classList.remove('show');
+  toast('✅ Faktura oppdatert!');
+  lastendreHistFakturaer(); lastendreOversikt();
+}
+
+// ── FORFALT VARSEL ──
+async function sjekkForfalteFacturaer() {
+  if (!BRUKER_ID) return;
+  const idag = new Date().toISOString().split('T')[0];
+  const { data } = await sb.from('fakturaer').select('kunde_navn,faktura_nr,forfall,totalt')
+    .eq('user_id',BRUKER_ID).neq('status','betalt').lt('forfall',idag);
+  if (!data || data.length===0) return;
+  const existing = document.getElementById('forfalt-banner');
+  if (existing) existing.remove();
+  const banner = document.createElement('div');
+  banner.id = 'forfalt-banner';
+  banner.style.cssText = 'position:fixed;top:53px;left:0;right:0;z-index:89;background:rgba(255,77,109,0.1);border-bottom:1px solid rgba(255,77,109,0.3);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;font-size:14px;';
+  banner.innerHTML = '<span>⚠️ <strong>' + data.length + ' faktura' + (data.length>1?'er':'') + ' forfalt</strong> – ' + data.map(function(f){ return f.kunde_navn + ' (' + fmtKr(f.totalt) + ')'; }).join(', ') + '</span><button onclick="this.parentElement.remove();showPage('historikk',document.querySelector('[data-page=historikk]'))" style="background:var(--red);color:white;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px;font-family:Syne,sans-serif;font-weight:700;">Se fakturaer</button>';
+  document.body.appendChild(banner);
+}
+
+// ── LYS/MØRK MODUS ──
+let lysModus = localStorage.getItem('skanly_theme') === 'light';
+function toggleTheme() {
+  lysModus = !lysModus;
+  localStorage.setItem('skanly_theme', lysModus ? 'light' : 'dark');
+  applyTheme();
+}
+function applyTheme() {
+  if (lysModus) {
+    document.documentElement.style.setProperty('--bg','#f5f6fa');
+    document.documentElement.style.setProperty('--surface','#ffffff');
+    document.documentElement.style.setProperty('--surface2','#f0f1f5');
+    document.documentElement.style.setProperty('--border','#e2e4ea');
+    document.documentElement.style.setProperty('--text','#0e1117');
+    document.documentElement.style.setProperty('--muted','#9ba3b2');
+    document.documentElement.style.setProperty('--muted2','#6b7280');
+    const btn = document.getElementById('themeBtn');
+    if (btn) btn.textContent = '🌙';
+  } else {
+    document.documentElement.style.setProperty('--bg','#080a0e');
+    document.documentElement.style.setProperty('--surface','#0f1218');
+    document.documentElement.style.setProperty('--surface2','#151920');
+    document.documentElement.style.setProperty('--border','#1e2535');
+    document.documentElement.style.setProperty('--text','#e8edf5');
+    document.documentElement.style.setProperty('--muted','#4a5568');
+    document.documentElement.style.setProperty('--muted2','#6b7a93');
+    const btn = document.getElementById('themeBtn');
+    if (btn) btn.textContent = '☀️';
+  }
+}
+applyTheme();
+
+// ── UTILS ──
+function fmtKr(n) {
+  return new Intl.NumberFormat('no-NO',{style:'currency',currency:'NOK',minimumFractionDigits:0,maximumFractionDigits:0}).format(n||0);
+}
+</script>
+</body>
+</html>
